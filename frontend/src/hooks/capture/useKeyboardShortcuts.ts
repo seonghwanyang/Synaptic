@@ -107,13 +107,11 @@ export function useKeyboardShortcuts(options: ShortcutOptions = {}) {
       // Show help with ?
       if (e.key === '?' && !isOpen) {
         toast.info(
-          <div className="space-y-1">
-            <p className="font-semibold">Keyboard Shortcuts:</p>
-            <p className="text-sm">⌘/Ctrl + Shift + N: Open Quick Capture</p>
-            <p className="text-sm">⌘/Ctrl + 1/2/3: Switch modes (when open)</p>
-            <p className="text-sm">⌘/Ctrl + S: Save capture</p>
-            <p className="text-sm">Esc: Close capture</p>
-          </div>,
+          'Keyboard Shortcuts:\n' +
+          '⌘/Ctrl + Shift + N: Open Quick Capture\n' +
+          '⌘/Ctrl + 1/2/3: Switch modes (when open)\n' +
+          '⌘/Ctrl + S: Save capture\n' +
+          'Esc: Close capture',
           { duration: 5000 }
         );
       }

@@ -1,13 +1,16 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import morgan from 'morgan';
 import { authMiddleware } from './middleware/auth';
 import { getUserProfile, updateUserProfile } from './auth/supabase';
+import { errorHandler } from './middleware/error';
+import routes from './routes';
 
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 5000;
 
 // CORS configuration
 app.use(cors({
@@ -15,48 +18,28 @@ app.use(cors({
   credentials: true,
 }));
 
+// Middleware
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(morgan('dev'));
 
 // Health check endpoint
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+app.get('/api/health', (req, res) => {
+  res.json({ 
+    status: 'ok', 
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development'
+  });
 });
 
-// Protected route example - Get user profile
-app.get('/api/user/profile', authMiddleware, async (req, res) => {
-  try {
-    const userId = req.user!.id;
-    const profile = await getUserProfile(userId);
-    res.json(profile);
-  } catch (error) {
-    console.error('Error fetching profile:', error);
-    res.status(500).json({ error: 'Failed to fetch profile' });
-  }
-});
+// API Routes
+app.use('/api', routes);
 
-// Protected route example - Update user profile
-app.patch('/api/user/profile', authMiddleware, async (req, res) => {
-  try {
-    const userId = req.user!.id;
-    const updates = req.body;
-    
-    // Validate updates here if needed
-    const allowedFields = ['full_name', 'username', 'bio', 'avatar_url', 'settings'];
-    const filteredUpdates = Object.keys(updates)
-      .filter(key => allowedFields.includes(key))
-      .reduce((obj, key) => {
-        obj[key] = updates[key];
-        return obj;
-      }, {} as any);
+// Error handling middleware (must be last)
+app.use(errorHandler);
 
-    const updatedProfile = await updateUserProfile(userId, filteredUpdates);
-    res.json(updatedProfile);
-  } catch (error) {
-    console.error('Error updating profile:', error);
-    res.status(500).json({ error: 'Failed to update profile' });
-  }
-});
-
+// Start server
 app.listen(PORT, () => {
-  console.log(`Backend server running on http://localhost:${PORT}`);
+  console.log(`🚀 Server running on http://localhost:${PORT}`);
+  console.log(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
 });

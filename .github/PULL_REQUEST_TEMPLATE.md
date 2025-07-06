@@ -1,35 +1,36 @@
-## 📋 Description
-Brief description of what this PR does.
+## 📋 PR 체크리스트
 
-## 🔗 Related Issue
-Fixes #(issue number)
+### 🎯 변경 사항 요약
+<!-- 이 PR이 해결하는 문제나 추가하는 기능을 간단히 설명해주세요 -->
 
-## 🏷️ Type of Change
-- [ ] 🐛 Bug fix (non-breaking change which fixes an issue)
-- [ ] ✨ New feature (non-breaking change which adds functionality)
-- [ ] 💥 Breaking change (fix or feature that would cause existing functionality to not work as expected)
-- [ ] 📝 Documentation update
-- [ ] 🎨 Style update (formatting, renaming)
-- [ ] ♻️ Code refactor (no functional changes)
-- [ ] ⚡ Performance improvement
-- [ ] ✅ Test update
-- [ ] 🔧 Configuration change
+### 🔗 관련 이슈
+<!-- 관련 이슈 번호를 링크해주세요 (예: Closes #123) -->
+- Closes #
 
-## 📸 Screenshots (if applicable)
-Add screenshots to help reviewers understand the changes.
+### 📝 변경 사항 상세
+<!-- 구체적인 변경 사항을 나열해주세요 -->
+- 
+- 
+- 
 
-## ✅ Checklist
-- [ ] My code follows the style guidelines of this project
-- [ ] I have performed a self-review of my code
-- [ ] I have commented my code, particularly in hard-to-understand areas
-- [ ] I have made corresponding changes to the documentation
-- [ ] My changes generate no new warnings
-- [ ] I have added tests that prove my fix is effective or that my feature works
-- [ ] New and existing unit tests pass locally with my changes
-- [ ] Any dependent changes have been merged and published
+### ✅ 체크리스트
+<!-- 해당하는 항목에 체크해주세요 -->
+- [ ] 코드가 프로젝트 코딩 컨벤션을 따릅니다
+- [ ] 셀프 리뷰를 완료했습니다
+- [ ] 필요한 문서를 추가/수정했습니다
+- [ ] 변경사항에 대한 테스트를 추가했습니다
+- [ ] 모든 테스트가 통과합니다
+- [ ] 타입 체크가 통과합니다 (`pnpm type-check`)
+- [ ] 린트가 통과합니다 (`pnpm lint`)
 
-## 🧪 Testing
-Describe the tests that you ran to verify your changes. Provide instructions so we can reproduce.
+### 🧪 테스트 결과
+<!-- 테스트 실행 결과나 수동 테스트 방법을 설명해주세요 -->
+```bash
+# 테스트 명령어와 결과를 여기에 붙여넣으세요
+```
 
-## 📝 Additional Notes
-Add any additional notes or context about the PR here.
+### 📸 스크린샷 (UI 변경시)
+<!-- UI 변경사항이 있다면 전/후 스크린샷을 첨부해주세요 -->
+
+### 💬 추가 정보
+<!-- 리뷰어가 알아야 할 추가 정보가 있다면 여기에 작성해주세요 -->
