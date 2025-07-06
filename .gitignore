@@ -134,4 +134,8 @@ secrets/
 credentials/
 *.secret
 config.local.js
-config.local.ts
+config.local.ts# .env 파일 (민감한 정보 포함)
+.env
+.env.local
+.env.production
+.env.production.local
