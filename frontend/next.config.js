@@ -2,7 +2,7 @@
 const nextConfig = {
   reactStrictMode: true,
   experimental: {
-    typedRoutes: true,
+    typedRoutes: false,
   },
   webpack: (config, { isServer }) => {
     // Disable webpack cache for now to avoid issues
