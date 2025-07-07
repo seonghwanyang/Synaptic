@@ -1,92 +1,94 @@
-'use client'
+'use client';
 
-import { useEffect, useRef, useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { X, Mic, Image as ImageIcon, Sparkles } from 'lucide-react'
-import { useQuickCapture } from '@/hooks/capture/useQuickCapture'
-import { toast } from 'sonner'
+import { useEffect, useRef, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { X, Mic, Image as ImageIcon, Sparkles } from 'lucide-react';
+import { useQuickCapture } from '@/hooks/capture/useQuickCapture';
+import { toast } from 'sonner';
 
 interface QuickCaptureModalProps {
-  isOpen: boolean
-  onClose: () => void
+  isOpen: boolean;
+  onClose: () => void;
 }
 
 export function QuickCaptureModal({ isOpen, onClose }: QuickCaptureModalProps) {
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
-  const [content, setContent] = useState('')
-  const [isRecording, setIsRecording] = useState(false)
-  const [isSaving, setIsSaving] = useState(false)
-  const { saveCapture } = useQuickCapture()
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [content, setContent] = useState('');
+  const [isRecording, setIsRecording] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const { addToQueue } = useQuickCapture();
 
   // Auto-focus when modal opens
   useEffect(() => {
     if (isOpen && textareaRef.current) {
-      textareaRef.current.focus()
+      textareaRef.current.focus();
     }
-  }, [isOpen])
+  }, [isOpen]);
 
   // Auto-save with debounce
   useEffect(() => {
-    if (!content.trim()) return
+    if (!content.trim()) return;
 
     const timer = setTimeout(async () => {
-      setIsSaving(true)
+      setIsSaving(true);
       try {
-        await saveCapture({
+        await addToQueue({
           type: 'text',
-          data: { content }
-        })
-        toast.success('자동 저장됨', { duration: 1000 })
+          data: { content },
+          timestamp: new Date(),
+        });
+        toast.success('자동 저장됨', { duration: 1000 });
       } catch (error) {
-        console.error('Auto-save error:', error)
+        console.error('Auto-save error:', error);
       } finally {
-        setIsSaving(false)
+        setIsSaving(false);
       }
-    }, 1000)
+    }, 1000);
 
-    return () => clearTimeout(timer)
-  }, [content, saveCapture])
+    return () => clearTimeout(timer);
+  }, [content, addToQueue]);
 
   // Handle Cmd+Enter to save and close
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
-      e.preventDefault()
-      handleSaveAndClose()
+      e.preventDefault();
+      handleSaveAndClose();
     }
-  }
+  };
 
   const handleSaveAndClose = async () => {
     if (!content.trim()) {
-      onClose()
-      return
+      onClose();
+      return;
     }
 
-    setIsSaving(true)
+    setIsSaving(true);
     try {
-      await saveCapture({
+      await addToQueue({
         type: 'text',
-        data: { content }
-      })
-      toast.success('저장되었습니다!')
-      setContent('')
-      onClose()
+        data: { content },
+        timestamp: new Date(),
+      });
+      toast.success('저장되었습니다!');
+      setContent('');
+      onClose();
     } catch (error) {
-      toast.error('저장 중 오류가 발생했습니다')
+      toast.error('저장 중 오류가 발생했습니다');
     } finally {
-      setIsSaving(false)
+      setIsSaving(false);
     }
-  }
+  };
 
   const handleVoiceCapture = () => {
-    setIsRecording(!isRecording)
-    toast.info(isRecording ? '녹음 중지' : '녹음 시작')
+    setIsRecording(!isRecording);
+    toast.info(isRecording ? '녹음 중지' : '녹음 시작');
     // TODO: Implement voice recording
-  }
+  };
 
   const handleImageCapture = () => {
     // TODO: Implement image upload
-    toast.info('이미지 업로드 기능 준비 중')
-  }
+    toast.info('이미지 업로드 기능 준비 중');
+  };
 
   return (
     <AnimatePresence>
@@ -145,9 +147,11 @@ export function QuickCaptureModal({ isOpen, onClose }: QuickCaptureModalProps) {
                       isRecording ? 'bg-red-50 shadow-red-200' : ''
                     }`}
                   >
-                    <Mic className={`w-6 h-6 ${
-                      isRecording ? 'text-red-500' : 'text-cyan-600'
-                    }`} />
+                    <Mic
+                      className={`w-6 h-6 ${
+                        isRecording ? 'text-red-500' : 'text-cyan-600'
+                      }`}
+                    />
                   </button>
                   <button
                     onClick={handleImageCapture}
@@ -173,5 +177,5 @@ export function QuickCaptureModal({ isOpen, onClose }: QuickCaptureModalProps) {
         </>
       )}
     </AnimatePresence>
-  )
+  );
 }
