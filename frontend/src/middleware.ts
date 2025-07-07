@@ -58,6 +58,13 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
+  // Debug logging
+  console.log('Middleware:', {
+    path: request.nextUrl.pathname,
+    hasUser: !!user,
+    userId: user?.id
+  })
+
   // Protected routes
   const protectedPaths = ['/dashboard', '/notes', '/settings']
   const isProtectedPath = protectedPaths.some(path => 
@@ -65,6 +72,7 @@ export async function middleware(request: NextRequest) {
   )
 
   if (isProtectedPath && !user) {
+    console.log('Redirecting to login - no user for protected path')
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
@@ -75,6 +83,7 @@ export async function middleware(request: NextRequest) {
   )
 
   if (isAuthPath && user) {
+    console.log('Redirecting to dashboard - user already authenticated')
     return NextResponse.redirect(new URL('/dashboard', request.url))
   }
 

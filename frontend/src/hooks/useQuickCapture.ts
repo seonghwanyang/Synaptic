@@ -24,7 +24,7 @@ export function useQuickCapture() {
       if (captureData.type === 'text' && captureData.data.content) {
         const result = await api.notes.create({
           content: captureData.data.content,
-          type: 'text',
+          content_type: 'text',
         });
         return result.data;
       }

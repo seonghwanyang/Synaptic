@@ -33,9 +33,11 @@ export function QuickCaptureModal({ isOpen, onClose }: QuickCaptureModalProps) {
       setIsSaving(true);
       try {
         await addToQueue({
-          type: 'text',
-          data: { content },
-          timestamp: new Date(),
+          id: `capture-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          mode: 'text',
+          content,
+          createdAt: new Date(),
+          status: 'pending',
         });
         toast.success('자동 저장됨', { duration: 1000 });
       } catch (error) {
@@ -65,9 +67,11 @@ export function QuickCaptureModal({ isOpen, onClose }: QuickCaptureModalProps) {
     setIsSaving(true);
     try {
       await addToQueue({
-        type: 'text',
-        data: { content },
-        timestamp: new Date(),
+        id: `capture-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        mode: 'text',
+        content,
+        createdAt: new Date(),
+        status: 'pending',
       });
       toast.success('저장되었습니다!');
       setContent('');

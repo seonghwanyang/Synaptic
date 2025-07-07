@@ -1,77 +1,92 @@
-import { Request, Response, NextFunction } from 'express';
-import { verifyToken } from '../auth/supabase';
+import { Request, Response, NextFunction } from 'express'
+import { supabaseAdmin } from '../config/supabase'
 
-// Module declaration for Express types
-export {}; // This makes this file a module
-
-declare global {
-  namespace Express {
-    interface Request {
-      user?: {
-        id: string;
-        email?: string;
-        role?: string;
-      };
-    }
+// Extend Express Request type
+export interface AuthRequest extends Request {
+  user?: {
+    id: string
+    email: string
+    user_metadata?: any
   }
 }
 
-export const authMiddleware = async (
-  req: Request,
+export const authenticate = async (
+  req: AuthRequest,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    // Get token from Authorization header
-    const authHeader = req.headers.authorization;
-
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({ error: 'No token provided' });
+    const authHeader = req.headers.authorization
+    
+    // Debug logging
+    console.log('Auth middleware:', {
+      method: req.method,
+      url: req.url,
+      hasAuthHeader: !!authHeader,
+      authHeader: authHeader ? authHeader.substring(0, 30) + '...' : 'None'
+    })
+    
+    if (!authHeader) {
+      return res.status(401).json({
+        error: 'Authorization header required',
+        code: 'NO_AUTH_HEADER'
+      })
     }
 
-    const token = authHeader.substring(7); // Remove 'Bearer ' prefix
+    const token = authHeader.replace('Bearer ', '')
+    
+    if (!token) {
+      return res.status(401).json({
+        error: 'Token required',
+        code: 'NO_TOKEN'
+      })
+    }
 
     // Verify token with Supabase
-    const user = await verifyToken(token);
+    const { data: { user }, error } = await supabaseAdmin.auth.getUser(token)
+    
+    if (error || !user) {
+      console.error('Token verification failed:', error)
+      return res.status(401).json({
+        error: 'Invalid or expired token',
+        code: 'INVALID_TOKEN'
+      })
+    }
 
     // Attach user to request
     req.user = {
       id: user.id,
-      email: user.email,
-      role: user.role,
-    };
+      email: user.email!,
+      user_metadata: user.user_metadata
+    }
 
-    next();
+    console.log('Auth successful for user:', user.id)
+    next()
   } catch (error) {
-    // eslint-disable-next-line no-console
-    console.error('Auth middleware error:', error);
-    return res.status(401).json({ error: 'Invalid or expired token' });
+    console.error('Auth middleware error:', error)
+    res.status(500).json({
+      error: 'Authentication error',
+      code: 'AUTH_ERROR'
+    })
   }
-};
+}
 
 // Optional auth middleware - doesn't fail if no token
-export const optionalAuthMiddleware = async (
-  req: Request,
+export const optionalAuthenticate = async (
+  req: AuthRequest,
   res: Response,
   next: NextFunction
 ) => {
-  try {
-    const authHeader = req.headers.authorization;
-
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      const token = authHeader.substring(7);
-      const user = await verifyToken(token);
-
-      req.user = {
-        id: user.id,
-        email: user.email,
-        role: user.role,
-      };
-    }
-
-    next();
-  } catch (error) {
-    // Continue without user context
-    next();
+  const authHeader = req.headers.authorization
+  
+  if (!authHeader) {
+    return next()
   }
-};
+
+  // Token이 있으면 검증 시도
+  await authenticate(req, res, next)
+}
+
+// For backward compatibility
+export const authMiddleware = authenticate
+export const optionalAuthMiddleware = optionalAuthenticate
