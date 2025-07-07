@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import morgan from 'morgan';
+import helmet from 'helmet';
 import { errorHandler } from './middleware/error';
 import routes from './routes';
 
@@ -9,6 +10,9 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+
+// Security middleware
+app.use(helmet());
 
 // CORS configuration
 app.use(
