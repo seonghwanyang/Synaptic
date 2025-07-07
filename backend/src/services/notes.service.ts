@@ -68,8 +68,8 @@ export async function createNote(noteData: CreateNoteData) {
       tags: noteData.tags || [],
       metadata: {
         wordCount: noteData.content.split(/\s+/).length,
-        createdVia: 'api'
-      }
+        createdVia: 'api',
+      },
     })
     .select()
     .single();
@@ -78,12 +78,24 @@ export async function createNote(noteData: CreateNoteData) {
   return data;
 }
 
-export async function updateNote(id: string, userId: string, updates: any) {
+interface NoteUpdates {
+  title?: string;
+  content?: string;
+  category?: string;
+  tags?: string[];
+  metadata?: Record<string, unknown>;
+}
+
+export async function updateNote(
+  id: string,
+  userId: string,
+  updates: NoteUpdates
+) {
   const { data, error } = await supabase
     .from('notes')
     .update({
       ...updates,
-      updated_at: new Date().toISOString()
+      updated_at: new Date().toISOString(),
     })
     .eq('id', id)
     .eq('user_id', userId)
@@ -107,7 +119,11 @@ export async function deleteNote(id: string, userId: string) {
   return data;
 }
 
-export async function searchNotes(userId: string, query: string, limit: number = 10) {
+export async function searchNotes(
+  userId: string,
+  query: string,
+  limit: number = 10
+) {
   const { data, error } = await supabase
     .from('notes')
     .select('id, title, content, created_at')
@@ -120,7 +136,11 @@ export async function searchNotes(userId: string, query: string, limit: number =
   return data;
 }
 
-export async function addTagsToNote(id: string, userId: string, newTags: string[]) {
+export async function addTagsToNote(
+  id: string,
+  userId: string,
+  newTags: string[]
+) {
   // First get the current note
   const note = await getNoteById(id, userId);
   if (!note) return null;
@@ -133,14 +153,18 @@ export async function addTagsToNote(id: string, userId: string, newTags: string[
   return updateNote(id, userId, { tags: uniqueTags });
 }
 
-export async function removeTagFromNote(id: string, userId: string, tagToRemove: string) {
+export async function removeTagFromNote(
+  id: string,
+  userId: string,
+  tagToRemove: string
+) {
   // First get the current note
   const note = await getNoteById(id, userId);
   if (!note) return null;
 
   // Filter out the tag
   const currentTags = note.tags || [];
-  const updatedTags = currentTags.filter(tag => tag !== tagToRemove);
+  const updatedTags = currentTags.filter((tag) => tag !== tagToRemove);
 
   // Update note
   return updateNote(id, userId, { tags: updatedTags });

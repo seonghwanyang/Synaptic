@@ -17,7 +17,7 @@ export const errorHandler = (
   err: Error | AppError,
   req: Request,
   res: Response,
-  next: NextFunction
+  _next: NextFunction
 ) => {
   let statusCode = 500;
   let message = 'Internal Server Error';
@@ -34,6 +34,7 @@ export const errorHandler = (
   }
 
   // Log error
+  // eslint-disable-next-line no-console
   console.error(`Error ${statusCode}: ${message}`, {
     error: err,
     stack: err.stack,

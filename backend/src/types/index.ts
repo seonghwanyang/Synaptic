@@ -1,7 +1,8 @@
-import { Request } from 'express';
 import { User } from '@supabase/supabase-js';
 
-// Extend Express Request to include user
+// Module declaration for Express types
+export {}; // This makes this file a module
+
 declare global {
   namespace Express {
     interface Request {
@@ -21,7 +22,7 @@ export interface Note {
   metadata?: {
     wordCount?: number;
     createdVia?: string;
-    [key: string]: any;
+    [key: string]: unknown;
   };
   created_at: string;
   updated_at: string;
@@ -39,26 +40,26 @@ export interface UserProfile {
     theme?: 'light' | 'dark' | 'system';
     language?: string;
     notifications?: boolean;
-    [key: string]: any;
+    [key: string]: unknown;
   };
   created_at: string;
   updated_at: string;
 }
 
 // API response types
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   success: boolean;
   data?: T;
   error?: {
     message: string;
     code?: string;
-    details?: any;
+    details?: unknown;
   };
   meta?: {
     page?: number;
     limit?: number;
     total?: number;
-    [key: string]: any;
+    [key: string]: unknown;
   };
 }
 
@@ -82,5 +83,5 @@ export interface QueryFilters {
   sort?: string;
   order?: 'asc' | 'desc';
   search?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
