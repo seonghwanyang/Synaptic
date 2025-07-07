@@ -7,6 +7,9 @@ const router = Router();
 // All capture routes require authentication
 router.use(authMiddleware);
 
+// Quick capture endpoint
+router.post('/quick', captureController.quickCapture);
+
 // Different capture types
 router.post('/text', captureController.captureText);
 router.post('/voice', captureController.captureVoice);

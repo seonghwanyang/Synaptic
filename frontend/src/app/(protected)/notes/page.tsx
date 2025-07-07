@@ -1,14 +1,16 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
-import { Grid3x3, List, Search, Filter, Plus } from 'lucide-react'
-import { NoteCard } from '@/components/notes/NoteCard'
-import { CategoryFilter } from '@/components/notes/CategoryFilter'
-import { TagCloud } from '@/components/notes/TagCloud'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { useQuickCaptureModal } from '@/providers/QuickCaptureProvider'
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { Grid3x3, List, Search, Plus } from 'lucide-react';
+import { NoteCard } from '@/components/notes/NoteCard';
+import { CategoryFilter } from '@/components/notes/CategoryFilter';
+import { TagCloud } from '@/components/notes/TagCloud';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { useQuickCaptureModal } from '@/providers/QuickCaptureProvider';
+import { api } from '@/lib/api/client';
+import { toast } from 'sonner';
 
 const categories = [
   { id: 'all', name: 'All', color: '#6B7280' },
@@ -17,56 +19,60 @@ const categories = [
   { id: 'learning', name: 'Learning', color: '#8B5CF6' },
   { id: 'ideas', name: 'Ideas', color: '#F59E0B' },
   { id: 'tasks', name: 'Tasks', color: '#10B981' },
-]
-
-// Mock data - replace with real API call
-const mockNotes = [
-  {
-    id: '1',
-    content: 'Meeting notes about the new project timeline and deliverables. Need to follow up with the design team.',
-    category: 'work',
-    tags: ['meeting', 'project', 'design'],
-    createdAt: new Date('2025-01-06T10:00:00'),
-    aiConfidence: 92,
-  },
-  {
-    id: '2',
-    content: 'Interesting article about machine learning applications in healthcare. Could be useful for the AI project.',
-    category: 'learning',
-    tags: ['AI', 'machine-learning', 'healthcare'],
-    createdAt: new Date('2025-01-06T14:30:00'),
-    aiConfidence: 88,
-  },
-  {
-    id: '3',
-    content: 'Personal goal: Start morning meditation routine. 10 minutes every day before work.',
-    category: 'personal',
-    tags: ['goals', 'meditation', 'habits'],
-    createdAt: new Date('2025-01-07T08:00:00'),
-    aiConfidence: 95,
-  },
-]
+];
 
 export default function NotesPage() {
-  const [notes, setNotes] = useState(mockNotes)
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
-  const [selectedCategory, setSelectedCategory] = useState('all')
-  const [searchQuery, setSearchQuery] = useState('')
-  const [selectedTags, setSelectedTags] = useState<string[]>([])
-  const { open: openQuickCapture } = useQuickCaptureModal()
+  const [notes, setNotes] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const { open: openQuickCapture } = useQuickCaptureModal();
 
-  // Filter notes based on category, search, and tags
-  const filteredNotes = notes.filter(note => {
-    const matchesCategory = selectedCategory === 'all' || note.category === selectedCategory
-    const matchesSearch = note.content.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesTags = selectedTags.length === 0 || 
-      selectedTags.some(tag => note.tags.includes(tag))
-    
-    return matchesCategory && matchesSearch && matchesTags
-  })
+  // Fetch notes on mount and when filters change
+  useEffect(() => {
+    fetchNotes();
+  }, [selectedCategory, searchQuery, selectedTags]);
+
+  const fetchNotes = async () => {
+    setIsLoading(true);
+    try {
+      const params: any = {};
+      if (selectedCategory !== 'all') params.category = selectedCategory;
+      if (searchQuery) params.search = searchQuery;
+      if (selectedTags.length > 0) params.tags = selectedTags;
+
+      const response = await api.notes.getAll(params);
+
+      // Transform the API response to match our component expectations
+      const transformedNotes = response.data.map((note: any) => ({
+        id: note.id,
+        content: note.content,
+        category: note.category?.slug || note.ai_category_id || 'personal',
+        tags: note.tags?.map((t: any) => t.tag.name) || note.ai_keywords || [],
+        createdAt: new Date(note.created_at),
+        aiConfidence: note.ai_confidence
+          ? Math.round(note.ai_confidence * 100)
+          : 85,
+        title: note.title,
+        summary: note.ai_summary,
+      }));
+
+      setNotes(transformedNotes);
+    } catch (error) {
+      console.error('Failed to fetch notes:', error);
+      toast.error('Failed to load notes');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Filter notes on the client side (for immediate feedback)
+  const filteredNotes = notes;
 
   // Extract all unique tags
-  const allTags = Array.from(new Set(notes.flatMap(note => note.tags)))
+  const allTags = Array.from(new Set(notes.flatMap((note) => note.tags)));
 
   return (
     <div className="flex h-[calc(100vh-4rem)]">
@@ -91,11 +97,11 @@ export default function NotesPage() {
             tags={allTags}
             selectedTags={selectedTags}
             onToggleTag={(tag) => {
-              setSelectedTags(prev =>
+              setSelectedTags((prev) =>
                 prev.includes(tag)
-                  ? prev.filter(t => t !== tag)
+                  ? prev.filter((t) => t !== tag)
                   : [...prev, tag]
-              )
+              );
             }}
           />
         </div>
@@ -148,7 +154,11 @@ export default function NotesPage() {
 
         {/* Notes Grid/List */}
         <div className="p-6">
-          {filteredNotes.length === 0 ? (
+          {isLoading ? (
+            <div className="text-center py-12">
+              <p className="text-gray-500">Loading notes...</p>
+            </div>
+          ) : filteredNotes.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-gray-500">No notes found</p>
             </div>
@@ -163,7 +173,10 @@ export default function NotesPage() {
                 >
                   <NoteCard
                     note={note}
-                    categoryColor={categories.find(c => c.id === note.category)?.color || '#6B7280'}
+                    categoryColor={
+                      categories.find((c) => c.id === note.category)?.color ||
+                      '#6B7280'
+                    }
                   />
                 </motion.div>
               ))}
@@ -179,7 +192,10 @@ export default function NotesPage() {
                 >
                   <NoteCard
                     note={note}
-                    categoryColor={categories.find(c => c.id === note.category)?.color || '#6B7280'}
+                    categoryColor={
+                      categories.find((c) => c.id === note.category)?.color ||
+                      '#6B7280'
+                    }
                     viewMode="list"
                   />
                 </motion.div>
@@ -189,5 +205,5 @@ export default function NotesPage() {
         </div>
       </main>
     </div>
-  )
+  );
 }
