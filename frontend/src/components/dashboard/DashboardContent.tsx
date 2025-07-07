@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import {
   FileText,
@@ -15,7 +15,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { useQuickCaptureModal } from '@/providers/QuickCaptureProvider';
 import Link from 'next/link';
-import { api } from '@/lib/api/client';
+import { api, supabase } from '@/lib/api/client';
 import { toast } from 'sonner';
 
 // Initial states
@@ -121,21 +121,34 @@ export function DashboardContent() {
     else setGreeting('좋은 저녁이에요');
   }, []);
 
-  useEffect(() => {
-    fetchDashboardData();
-  }, []);
-
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = useCallback(async () => {
     setIsLoading(true);
     try {
+      // Check if user is authenticated
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session) {
+        // No session found, skipping dashboard data fetch
+        setIsLoading(false);
+        return;
+      }
+
       // Fetch recent notes
       const notesResponse = await api.notes.getAll({ limit: 3 });
-      const notes = notesResponse.data.map((note: any) => ({
-        id: note.id,
-        content: note.content,
-        category: note.category?.slug || 'personal',
-        createdAt: new Date(note.created_at),
-      }));
+      const notes = notesResponse.data.map(
+        (note: {
+          id: string;
+          content: string;
+          category?: { slug: string };
+          created_at: string;
+        }) => ({
+          id: note.id,
+          content: note.content,
+          category: note.category?.slug || 'personal',
+          createdAt: new Date(note.created_at),
+        })
+      );
       setRecentNotes(notes);
 
       // Calculate stats (for now, just count the notes)
@@ -161,7 +174,16 @@ export function DashboardContent() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    // Add a small delay to ensure session is loaded
+    const timer = setTimeout(() => {
+      fetchDashboardData();
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [fetchDashboardData]);
 
   return (
     <div className="p-8">

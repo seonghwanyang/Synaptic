@@ -1,7 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  swcMinify: true,
   experimental: {
     typedRoutes: true,
   },
@@ -10,6 +9,6 @@ const nextConfig = {
     config.cache = false;
     return config;
   },
-}
+};
 
-module.exports = nextConfig
+module.exports = nextConfig;

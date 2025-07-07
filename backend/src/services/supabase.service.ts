@@ -1,26 +1,43 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.SUPABASE_URL || 'http://localhost:54321';
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY || '';
+// Lazy initialization of Supabase client
+let supabaseInstance: SupabaseClient | null = null;
 
-if (!supabaseServiceKey) {
-  // eslint-disable-next-line no-console
-  console.warn(
-    'SUPABASE_SERVICE_KEY is not set. Some features may not work correctly.'
-  );
-}
+export const getSupabase = () => {
+  if (!supabaseInstance) {
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY;
 
-// Create Supabase client with service role key for backend operations
-export const supabase = createClient(supabaseUrl, supabaseServiceKey, {
-  auth: {
-    autoRefreshToken: false,
-    persistSession: false,
+    if (!supabaseUrl) {
+      throw new Error('SUPABASE_URL is required');
+    }
+
+    if (!supabaseServiceKey) {
+      throw new Error('SUPABASE_SERVICE_KEY is required');
+    }
+
+    // Create Supabase client with service role key for backend operations
+    supabaseInstance = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+    });
+  }
+  return supabaseInstance;
+};
+
+// For backward compatibility
+export const supabase = new Proxy({} as SupabaseClient, {
+  get(target, prop, receiver) {
+    const instance = getSupabase();
+    return Reflect.get(instance, prop, receiver);
   },
 });
 
 // Helper functions for common Supabase operations
 export async function getUser(userId: string) {
-  const { data, error } = await supabase.auth.admin.getUserById(userId);
+  const { data, error } = await getSupabase().auth.admin.getUserById(userId);
 
   if (error) throw error;
   return data.user;
@@ -31,7 +48,7 @@ export async function createUser(
   password: string,
   metadata?: Record<string, unknown>
 ) {
-  const { data, error } = await supabase.auth.admin.createUser({
+  const { data, error } = await getSupabase().auth.admin.createUser({
     email,
     password,
     email_confirm: true,
@@ -54,7 +71,7 @@ interface UserUpdates {
 }
 
 export async function updateUser(userId: string, updates: UserUpdates) {
-  const { data, error } = await supabase.auth.admin.updateUserById(
+  const { data, error } = await getSupabase().auth.admin.updateUserById(
     userId,
     updates
   );
@@ -64,7 +81,7 @@ export async function updateUser(userId: string, updates: UserUpdates) {
 }
 
 export async function deleteUser(userId: string) {
-  const { data, error } = await supabase.auth.admin.deleteUser(userId);
+  const { data, error } = await getSupabase().auth.admin.deleteUser(userId);
 
   if (error) throw error;
   return data;

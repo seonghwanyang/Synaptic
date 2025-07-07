@@ -1,9 +1,19 @@
 import OpenAI from 'openai';
 import { AppError } from '../middleware/error';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// Lazy initialization of OpenAI client
+let openaiInstance: OpenAI | null = null;
+
+const getOpenAI = () => {
+  if (!openaiInstance) {
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) {
+      throw new Error('OPENAI_API_KEY is required');
+    }
+    openaiInstance = new OpenAI({ apiKey });
+  }
+  return openaiInstance;
+};
 
 export interface AICategorization {
   category: string;
@@ -20,7 +30,7 @@ export interface EmbeddingResult {
 export class AIService {
   async categorizeNote(content: string): Promise<AICategorization> {
     try {
-      const completion = await openai.chat.completions.create({
+      const completion = await getOpenAI().chat.completions.create({
         model: 'gpt-3.5-turbo-1106',
         messages: [
           {
@@ -81,7 +91,7 @@ export class AIService {
 
   async generateEmbedding(text: string): Promise<EmbeddingResult> {
     try {
-      const response = await openai.embeddings.create({
+      const response = await getOpenAI().embeddings.create({
         model: 'text-embedding-ada-002',
         input: text,
       });

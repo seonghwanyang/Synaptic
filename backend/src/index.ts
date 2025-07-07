@@ -1,12 +1,26 @@
+import dotenv from 'dotenv';
+import path from 'path';
+
+// Load environment variables
+const result = dotenv.config({ path: path.resolve(__dirname, '../.env') });
+if (result.error) {
+  console.error('Error loading .env file:', result.error);
+}
+
+// Debug: Log environment variables
+// eslint-disable-next-line no-console
+console.log('Environment variables loaded:');
+// eslint-disable-next-line no-console
+console.log('SUPABASE_URL:', process.env.SUPABASE_URL);
+// eslint-disable-next-line no-console
+console.log('PORT:', process.env.PORT);
+
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
 import morgan from 'morgan';
 import helmet from 'helmet';
 import { errorHandler } from './middleware/error';
 import routes from './routes';
-
-dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -43,7 +57,7 @@ app.use('/api', routes);
 app.use(errorHandler);
 
 // Start server
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   // eslint-disable-next-line no-console
   console.log(`🚀 Server running on http://localhost:${PORT}`);
   // eslint-disable-next-line no-console

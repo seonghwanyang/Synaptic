@@ -1,17 +1,43 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@synaptic/types';
 
-// Create Supabase admin client for server-side operations
-export const supabaseAdmin = createClient<Database>(
-  process.env.SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_KEY!,
-  {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
+// Lazy initialization of Supabase client
+let supabaseAdminInstance: SupabaseClient<Database> | null = null;
+
+export const getSupabaseAdmin = () => {
+  if (!supabaseAdminInstance) {
+    // Check environment variables
+    if (!process.env.SUPABASE_URL) {
+      console.error('SUPABASE_URL is not defined in environment variables');
+      throw new Error('SUPABASE_URL is required');
+    }
+
+    if (!process.env.SUPABASE_SERVICE_KEY) {
+      throw new Error('SUPABASE_SERVICE_KEY is required');
+    }
+
+    // Create Supabase admin client for server-side operations
+    supabaseAdminInstance = createClient<Database>(
+      process.env.SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_KEY,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false,
+        },
+      }
+    );
   }
-);
+  return supabaseAdminInstance;
+};
+
+// For backward compatibility
+export const supabaseAdmin = new Proxy({} as SupabaseClient<Database>, {
+  get(target, prop, receiver) {
+    const admin = getSupabaseAdmin();
+    return Reflect.get(admin, prop, receiver);
+  },
+});
 
 // Create user profile after signup
 interface UserMetadata {
@@ -26,7 +52,7 @@ export const createUserProfile = async (
   metadata?: UserMetadata
 ) => {
   try {
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await getSupabaseAdmin()
       .from('profiles')
       .insert({
         id: userId,
@@ -45,7 +71,7 @@ export const createUserProfile = async (
     }
 
     // Also create user_stats entry
-    await supabaseAdmin.from('user_stats').insert({
+    await getSupabaseAdmin().from('user_stats').insert({
       user_id: userId,
     });
 
@@ -63,7 +89,7 @@ export const verifyToken = async (token: string) => {
     const {
       data: { user },
       error,
-    } = await supabaseAdmin.auth.getUser(token);
+    } = await getSupabaseAdmin().auth.getUser(token);
 
     if (error || !user) {
       throw new Error('Invalid token');
@@ -80,7 +106,7 @@ export const verifyToken = async (token: string) => {
 // Get user profile by ID
 export const getUserProfile = async (userId: string) => {
   try {
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await getSupabaseAdmin()
       .from('profiles')
       .select('*')
       .eq('id', userId)
@@ -104,7 +130,7 @@ export const updateUserProfile = async (
   updates: Partial<Database['public']['Tables']['profiles']['Update']>
 ) => {
   try {
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await getSupabaseAdmin()
       .from('profiles')
       .update(updates)
       .eq('id', userId)
