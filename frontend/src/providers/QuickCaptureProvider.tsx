@@ -1,7 +1,7 @@
 'use client'
 
 import { createContext, useContext, useState, useCallback, useEffect } from 'react'
-import { QuickCaptureModal } from '@/components/capture/QuickCaptureModal'
+import { UnifiedQuickCapture } from '@/components/capture/UnifiedQuickCapture'
 
 interface QuickCaptureContextType {
   isOpen: boolean
@@ -36,7 +36,25 @@ export function QuickCaptureProvider({ children }: { children: React.ReactNode }
   return (
     <QuickCaptureContext.Provider value={{ isOpen, open, close, toggle }}>
       {children}
-      <QuickCaptureModal isOpen={isOpen} onClose={close} />
+      <UnifiedQuickCapture isOpen={isOpen} onClose={close} />
+      {/* Global floating action button */}
+      <button
+        onClick={open}
+        className="fixed bottom-6 right-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-coral-600 text-white shadow-lg hover:bg-coral-700 hover:scale-110 transition-all duration-200 dark:bg-coral-500 dark:hover:bg-coral-600"
+        aria-label="Quick Capture"
+      >
+        <svg
+          className="h-6 w-6"
+          fill="none"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="2"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path d="M12 4v16m8-8H4"></path>
+        </svg>
+      </button>
     </QuickCaptureContext.Provider>
   )
 }

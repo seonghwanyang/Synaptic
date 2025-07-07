@@ -1,8 +1,7 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import type { Database } from '@synaptic/types';
 
 // Lazy initialization of Supabase client
-let supabaseAdminInstance: SupabaseClient<Database> | null = null;
+let supabaseAdminInstance: SupabaseClient<any> | null = null;
 
 export const getSupabaseAdmin = () => {
   if (!supabaseAdminInstance) {
@@ -17,7 +16,7 @@ export const getSupabaseAdmin = () => {
     }
 
     // Create Supabase admin client for server-side operations
-    supabaseAdminInstance = createClient<Database>(
+    supabaseAdminInstance = createClient<any>(
       process.env.SUPABASE_URL,
       process.env.SUPABASE_SERVICE_KEY,
       {
@@ -32,7 +31,7 @@ export const getSupabaseAdmin = () => {
 };
 
 // For backward compatibility
-export const supabaseAdmin = new Proxy({} as SupabaseClient<Database>, {
+export const supabaseAdmin = new Proxy({} as SupabaseClient<any>, {
   get(target, prop, receiver) {
     const admin = getSupabaseAdmin();
     return Reflect.get(admin, prop, receiver);
@@ -127,7 +126,7 @@ export const getUserProfile = async (userId: string) => {
 // Update user profile
 export const updateUserProfile = async (
   userId: string,
-  updates: Partial<Database['public']['Tables']['profiles']['Update']>
+  updates: any
 ) => {
   try {
     const { data, error } = await getSupabaseAdmin()

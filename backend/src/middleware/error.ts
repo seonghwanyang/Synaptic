@@ -31,22 +31,30 @@ export const errorHandler = (
   } else if (err.name === 'UnauthorizedError') {
     statusCode = 401;
     message = 'Unauthorized';
+  } else {
+    // For other errors, use the error message
+    message = err.message || 'Internal Server Error';
   }
 
-  // Log error
-  // eslint-disable-next-line no-console
-  console.error(`Error ${statusCode}: ${message}`, {
-    error: err,
-    stack: err.stack,
-    url: req.url,
-    method: req.method,
-  });
+  // Log error with full details
+  console.error('\n=== ERROR DETAILS ===');
+  console.error(`URL: ${req.method} ${req.url}`);
+  console.error(`Status: ${statusCode}`);
+  console.error(`Message: ${message}`);
+  console.error(`Error Name: ${err.name}`);
+  console.error('Full Error:', err);
+  if (err.stack) {
+    console.error('Stack:', err.stack);
+  }
+  console.error('===================\n');
 
   res.status(statusCode).json({
     success: false,
     error: {
       message,
+      code: err.name,
       ...(process.env.NODE_ENV === 'development' && {
+        details: err.message,
         stack: err.stack,
       }),
     },

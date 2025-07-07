@@ -11,10 +11,12 @@ import {
   Brain,
   Clock,
   Plus,
+  LogOut,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useQuickCaptureModal } from '@/providers/QuickCaptureProvider';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { api, supabase } from '@/lib/api/client';
 import { toast } from 'sonner';
 
@@ -109,10 +111,12 @@ function StatCard({ title, value, icon, trend, color }: StatCardProps) {
 
 export function DashboardContent() {
   const { open: openQuickCapture } = useQuickCaptureModal();
+  const router = useRouter();
   const [greeting, setGreeting] = useState('');
   const [stats, setStats] = useState(initialStats);
   const [recentNotes, setRecentNotes] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   useEffect(() => {
     const hour = new Date().getHours();
@@ -185,16 +189,42 @@ export function DashboardContent() {
     return () => clearTimeout(timer);
   }, [fetchDashboardData]);
 
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    try {
+      await supabase.auth.signOut();
+      toast.success('로그아웃되었습니다');
+      router.push('/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+      toast.error('로그아웃 중 오류가 발생했습니다');
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
+
   return (
     <div className="p-8">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-          {greeting}, 사용자님! 👋
-        </h1>
-        <p className="text-gray-600 dark:text-gray-400 mt-2">
-          오늘도 멋진 아이디어를 기록해보세요
-        </p>
+      <div className="mb-8 flex justify-between items-start">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+            {greeting}, 사용자님! 👋
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-2">
+            오늘도 멋진 아이디어를 기록해보세요
+          </p>
+        </div>
+        <Button
+          onClick={handleLogout}
+          variant="outline"
+          size="sm"
+          disabled={isLoggingOut}
+          className="flex items-center gap-2"
+        >
+          <LogOut className="w-4 h-4" />
+          {isLoggingOut ? '로그아웃 중...' : '로그아웃'}
+        </Button>
       </div>
 
       {/* Quick Action */}
