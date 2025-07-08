@@ -1,0 +1,11 @@
+{
+  "extends": "../.eslintrc.json",
+  "overrides": [
+    {
+      "files": ["src/types/index.ts", "src/middleware/auth.ts"],
+      "rules": {
+        "@typescript-eslint/no-namespace": "off"
+      }
+    }
+  ]
+}

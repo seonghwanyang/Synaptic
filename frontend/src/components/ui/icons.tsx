@@ -1,4 +1,13 @@
-import { Loader2, Github, Mail, AlertCircle, Check, X, Eye, EyeOff } from 'lucide-react'
+import { 
+  Loader2, 
+  Github, 
+  Mail, 
+  AlertCircle, 
+  Check, 
+  X, 
+  Eye, 
+  EyeOff 
+} from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 export const Icons = {

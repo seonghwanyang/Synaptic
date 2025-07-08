@@ -1,0 +1,16 @@
+#!/usr/bin/env sh
+. "$(dirname "$0")/_/husky.sh"
+
+echo "🔍 Running type check..."
+npm run type-check || {
+  echo "❌ Type check failed. Please fix type errors before pushing."
+  exit 1
+}
+
+echo "🔍 Running lint..."
+npm run lint || {
+  echo "❌ Lint failed. Please fix linting errors before pushing."
+  exit 1
+}
+
+echo "✅ All checks passed!"

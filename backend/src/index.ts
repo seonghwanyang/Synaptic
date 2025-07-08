@@ -1,62 +1,75 @@
+import dotenv from 'dotenv';
+import path from 'path';
+
+// Load environment variables
+const result = dotenv.config({ path: path.resolve(__dirname, '../.env') });
+if (result.error) {
+  console.error('Error loading .env file:', result.error);
+}
+
+// Debug: Log environment variables
+// eslint-disable-next-line no-console
+console.log('Environment variables loaded:');
+// eslint-disable-next-line no-console
+console.log('SUPABASE_URL:', process.env.SUPABASE_URL);
+// eslint-disable-next-line no-console
+console.log('PORT:', process.env.PORT);
+
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
-import { authMiddleware } from './middleware/auth';
-import { getUserProfile, updateUserProfile } from './auth/supabase';
-
-dotenv.config();
+import morgan from 'morgan';
+import helmet from 'helmet';
+import { errorHandler } from './middleware/error';
+import routes from './routes';
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 5000;
+
+// Security middleware
+app.use(helmet());
 
 // CORS configuration
-app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
-  credentials: true,
-}));
+app.use(
+  cors({
+    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+    credentials: true,
+  })
+);
 
+// Middleware
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(morgan('dev'));
+
+// Log all incoming requests
+app.use((req, res, next) => {
+  console.log(`\n📥 ${new Date().toISOString()} - ${req.method} ${req.url}`);
+  console.log('Headers:', req.headers);
+  if (req.body && Object.keys(req.body).length > 0) {
+    console.log('Body:', req.body);
+  }
+  next();
+});
 
 // Health check endpoint
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+app.get('/api/health', (req, res) => {
+  res.json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development',
+  });
 });
 
-// Protected route example - Get user profile
-app.get('/api/user/profile', authMiddleware, async (req, res) => {
-  try {
-    const userId = req.user!.id;
-    const profile = await getUserProfile(userId);
-    res.json(profile);
-  } catch (error) {
-    console.error('Error fetching profile:', error);
-    res.status(500).json({ error: 'Failed to fetch profile' });
-  }
-});
+// API Routes
+app.use('/api', routes);
 
-// Protected route example - Update user profile
-app.patch('/api/user/profile', authMiddleware, async (req, res) => {
-  try {
-    const userId = req.user!.id;
-    const updates = req.body;
-    
-    // Validate updates here if needed
-    const allowedFields = ['full_name', 'username', 'bio', 'avatar_url', 'settings'];
-    const filteredUpdates = Object.keys(updates)
-      .filter(key => allowedFields.includes(key))
-      .reduce((obj, key) => {
-        obj[key] = updates[key];
-        return obj;
-      }, {} as any);
+// Error handling middleware (must be last)
+app.use(errorHandler);
 
-    const updatedProfile = await updateUserProfile(userId, filteredUpdates);
-    res.json(updatedProfile);
-  } catch (error) {
-    console.error('Error updating profile:', error);
-    res.status(500).json({ error: 'Failed to update profile' });
-  }
-});
-
-app.listen(PORT, () => {
-  console.log(`Backend server running on http://localhost:${PORT}`);
+// Start server
+app.listen(Number(PORT), '0.0.0.0', () => {
+  // eslint-disable-next-line no-console
+  console.log(`🚀 Server running on http://localhost:${PORT}`);
+  // eslint-disable-next-line no-console
+  console.log(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
 });

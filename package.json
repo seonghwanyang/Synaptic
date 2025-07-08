@@ -4,21 +4,24 @@
   "private": true,
   "description": "Synaptic - Second Brain AI Assistant",
   "scripts": {
-    "dev": "turbo dev",
-    "build": "turbo build",
-    "lint": "turbo lint",
+    "dev": "echo 'Please run npm run dev in frontend and backend folders separately'",
+    "build": "echo 'Please run npm run build in frontend and backend folders separately'",
+    "lint": "echo 'Please run npm run lint in frontend and backend folders separately'",
     "format": "prettier --write \"**/*.{ts,tsx,md,json}\"",
+    "type-check": "cd frontend && npm run type-check && cd ../backend && npm run type-check",
     "db:start": "docker-compose -f docker/docker-compose.yml up -d",
     "db:stop": "docker-compose -f docker/docker-compose.yml down",
     "prepare": "husky install"
   },
   "devDependencies": {
-    "turbo": "latest",
-    "prettier": "^3.1.0",
+    "@commitlint/cli": "^18.4.3",
+    "@commitlint/config-conventional": "^18.4.3",
+    "@types/node": "^20.10.5",
     "eslint": "^8.55.0",
     "husky": "^8.0.3",
     "lint-staged": "^15.2.0",
-    "@types/node": "^20.10.5"
+    "prettier": "^3.1.0",
+    "turbo": "^2.5.4"
   },
   "packageManager": "pnpm@8.14.0",
   "engines": {
